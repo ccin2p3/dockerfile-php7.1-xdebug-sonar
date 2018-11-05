@@ -1,7 +1,7 @@
 FROM php:7.1
 
 RUN apt-get update -yqq \
-    && apt-get install git wget unzip zlibc zlib1g zlib1g-dev libxml2-dev libssl-dev libicu-dev g++ -yqq
+    && apt-get install git wget unzip zlibc zlib1g zlib1g-dev libxml2-dev libssl-dev libicu-dev g++ apt-transport-https sudo gnupg gnupg1 gnupg2 tar -yqq
 
 # install general php extensions
 RUN docker-php-ext-install pdo_mysql \
@@ -10,26 +10,27 @@ RUN docker-php-ext-install pdo_mysql \
     && docker-php-ext-install soap \
     && docker-php-ext-install opcache \
     && docker-php-ext-configure intl \
-    && docker-php-ext-install intl \
-    && apt-get install -y nodejs npm
+    && docker-php-ext-install intl
+# install node
+RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+RUN apt-get install nodejs npm -yqq
 
 # install xdebug
 RUN pecl install xdebug \
-    && docker-php-ext-install xdebug
+    && docker-php-ext-enable xdebug
 
 # install xsl
 RUN apt-get install -y libxslt-dev \
     && docker-php-ext-install xsl
-
+    
 # install java
-RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" | tee /etc/apt/sources.list.d/webupd8team-java.list \
-    && echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list \
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 \
-    && apt-get update \
-    && echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections \
-    && apt-get install oracle-java8-installer -yqq
+RUN mkdir -p /usr/share/man/man1 \
+    && sudo apt-get install default-jre -yqq
 
 # install sonar scanner
-RUN wget https://sonarsource.bintray.com/Distribution/sonar-scanner-cli/sonar-scanner-2.8.zip \
-    && unzip sonar-scanner-2.8.zip \
-    && rm sonar-scanner-2.8.zip
+RUN wget 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip' \
+    && unzip 'sonar-scanner-cli-3.2.0.1227-linux.zip' \
+    && rm 'sonar-scanner-cli-3.2.0.1227-linux.zip' \
+    && ln -fs /sonar-scanner-3.2.0.1227-linux /sonar-scanner
+
+RUN sudo apt-get clean
